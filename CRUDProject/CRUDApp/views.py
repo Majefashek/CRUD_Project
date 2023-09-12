@@ -25,7 +25,13 @@ class UserRetrieveUpdateDestroyView(APIView):
                 user.delete()
                 return Response({"Success":"User deleted"})
             except User.DoesNotExist:
-                return Response({'Error': 'User does not exist'}, status=404)
+                try:
+                    user=User.objects.get(email=identifier)
+                    return Response({"Success":"User deleted"})
+                    
+                except User.DoesNotExist:
+                    return Response({'Error': 'User does not exist'}, status=404)
+
         except User.DoesNotExist:
             return Response({'Error': 'User does not exist'}, status=404)
 
@@ -44,12 +50,18 @@ class UserRetrieveUpdateDestroyView(APIView):
                 userSerialized=UserRetrieveDeleteSerializer(user)
                 return Response(userSerialized.data)
             except User.DoesNotExist:
-                return Response({'Error': 'User does not Exist'}, status=404)
+                try:
+                    user= User.objects.get(email=identifier)
+                    userSerialized=UserRetrieveDeleteSerializer(user)
+                    return Response(userSerialized.data)
+                except User.DoesNotExist:
+                    return Response({'Error': 'User does not Exist'}, status=404)
+      
         except User.DoesNotExist:
             return Response({'Error': 'User does not Exist'}, status=404)
 
 
-        pass
+        
     def put(self, request, identifier):
         try:
             # Try to convert the identifier to an integer (assuming it's an id)
@@ -73,9 +85,9 @@ class UserRetrieveUpdateDestroyView(APIView):
         serializer = UserUpdateSerializer(instance, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse(serializer.data, status=200)
+            return JsonResponse(serializer.data, status=201)
         else:
-            return JsonResponse(serializer.errors, status=400)
+            return JsonResponse(serializer.errors, status=404)
 
    
 
@@ -85,13 +97,13 @@ class CreateUserView(APIView):
         email= request.data.get('email')
         # Check if name is a string
         if not re.match(r'^[A-Za-z\s]+$', name):
-            return Response({'Error': 'name is not a string'}, status=400)
+            return Response({'Error': 'name is not a string'}, status=404)
         try:
             user = User.objects.create(name=name, email=email)
             user.save()
             user_serialized = UserCreateSerializer(user)
 
-            return Response(user_serialized.data, status=200)
+            return Response(user_serialized.data, status=201)
         except Exception as e:
             error_message = str(e) 
-            return Response({'Error':error_message}, status=400)
+            return Response({'Error':error_message}, status=404)
