@@ -101,7 +101,7 @@ class CreateUserView(APIView):
         try:
             user = User.objects.create(name=name, email=email)
             user.save()
-            user_serialized = UserCreateSerializer(user)
+            user_serialized = UserUpdateSerializer(user)
 
             return Response(user_serialized.data, status=201)
         except Exception as e:
